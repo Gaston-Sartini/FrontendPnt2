@@ -121,7 +121,10 @@ const formatearTiempo = segundos => {
         <div class="column is-6-tablet is-4-desktop">
           <div class="box av-kpi">
             <p class="heading">Posición en el ranking</p>
-            <p class="title is-3">🏆 #{{ metricas.posicion_ranking }}</p>
+            <p class="title is-3">
+              <template v-if="metricas.posicion_ranking">🏆 #{{ metricas.posicion_ranking }}</template>
+              <span v-else>Sin posición</span>
+            </p>
           </div>
         </div>
         <div class="column is-6-tablet is-4-desktop">
