@@ -56,7 +56,8 @@ onMounted(() => rankingStore.cargarRanking())
         <p class="av-texto-suave mb-3" aria-live="polite">
           Puestos {{ rangoInicio }}–{{ rangoFin }} de {{ totalJugadores }} jugadores · Página {{ pagina }} de {{ totalPaginas }}
         </p>
-        <div class="table-container">
+        <p id="ranking-desplazamiento" class="av-ayuda-tabla av-texto-suave is-size-7 mb-2">Deslizá la tabla hacia los costados para ver todas las estadísticas.</p>
+        <div class="table-container av-tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de posiciones" aria-describedby="ranking-desplazamiento">
           <table class="table is-fullwidth is-hoverable">
             <caption class="has-text-left av-texto-suave mb-3">Clasificación por puntos acumulados</caption>
             <thead>
@@ -69,7 +70,7 @@ onMounted(() => rankingStore.cargarRanking())
             <tbody>
               <tr v-for="jugador in filas" :key="jugador.user_id" :class="{ 'av-mi-fila': jugador.user_id === jugadorActualId }">
                 <td class="av-puesto"><span v-if="jugador.posicion <= 3" aria-hidden="true">{{ medallas[jugador.posicion - 1] }}</span> {{ jugador.posicion }}</td>
-                <th scope="row">{{ jugador.nombre }} {{ jugador.apellido }} <span v-if="jugador.user_id === jugadorActualId" class="tag is-primary is-light ml-2">Vos</span></th>
+                <th scope="row" class="av-jugador">{{ jugador.nombre }} {{ jugador.apellido }} <span v-if="jugador.user_id === jugadorActualId" class="tag is-primary is-light ml-2">Vos</span></th>
                 <td class="has-text-right av-puntos">{{ jugador.puntos_totales }}</td>
                 <td class="has-text-right">{{ jugador.aciertos }}</td><td class="has-text-right">{{ jugador.fallos }}</td>
                 <td class="has-text-right">{{ jugador.precision === null ? 'Sin respuestas' : `${jugador.precision}%` }}</td>
@@ -87,7 +88,7 @@ onMounted(() => rankingStore.cargarRanking())
 
       <section class="av-tu-posicion" aria-labelledby="ranking-posicion-titulo">
         <h2 id="ranking-posicion-titulo" class="title is-5">Tu posición</h2>
-        <div v-if="filaPersonal" class="table-container">
+        <div v-if="filaPersonal" class="table-container av-tabla-contenedor">
           <table class="table is-fullwidth">
             <caption class="has-text-left av-texto-suave mb-3">Tus estadísticas personales</caption>
             <thead>
@@ -106,7 +107,7 @@ onMounted(() => rankingStore.cargarRanking())
                   </template>
                   <span v-else>Sin posición</span>
                 </td>
-                <th scope="row">{{ filaPersonal.nombre }} {{ filaPersonal.apellido }} <span class="tag is-primary is-light ml-2">Vos</span></th>
+                <th scope="row" class="av-jugador">{{ filaPersonal.nombre }} {{ filaPersonal.apellido }} <span class="tag is-primary is-light ml-2">Vos</span></th>
                 <td class="has-text-right av-puntos">{{ filaPersonal.puntos_totales }}</td>
                 <td class="has-text-right">{{ filaPersonal.aciertos }}</td><td class="has-text-right">{{ filaPersonal.fallos }}</td>
                 <td class="has-text-right">{{ filaPersonal.precision === null ? 'Sin respuestas' : `${filaPersonal.precision}%` }}</td>
@@ -123,7 +124,37 @@ onMounted(() => rankingStore.cargarRanking())
 </template>
 
 <style scoped>
-.av-ranking { border-top: 5px solid var(--color-dorado); }
+.av-ranking {
+  border-top: 5px solid var(--color-dorado);
+  min-width: 0;
+  max-width: 100%;
+}
+.av-encabezado > div {
+  flex: 1 1 16rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.av-tabla-contenedor {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-crema);
+  border-radius: 8px;
+}
+.av-tabla-contenedor:focus-visible {
+  outline: 2px solid var(--color-musgo);
+  outline-offset: 3px;
+}
+.table {
+  min-width: 40rem;
+  margin-bottom: 0;
+}
+.av-jugador {
+  min-width: 10rem;
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+}
+.av-ayuda-tabla { display: none; }
 .av-encabezado, .av-controles {
   display: flex;
   flex-wrap: wrap;
@@ -153,6 +184,13 @@ onMounted(() => rankingStore.cargarRanking())
 .table tbody tr.av-mi-fila th,
 .table tbody tr.av-mi-fila td { color: var(--color-texto); }
 @media (max-width: 768px) {
-  .table { min-width: 620px; }
+  .av-ranking { padding: 1rem; }
+  .av-encabezado .button { width: 100%; }
+  .av-controles { gap: 0.75rem; }
+  .av-controles > .field, .av-controles > .button { width: 100%; }
+  .av-controles .select, .av-controles select { width: 100%; }
+}
+@media (max-width: 1200px) {
+  .av-ayuda-tabla { display: block; }
 }
 </style>
