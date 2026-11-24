@@ -5,7 +5,6 @@ import { useRankingStore } from '../stores/ranking.js'
 
 const rankingStore = useRankingStore()
 const { filas, filaPersonal, totalJugadores, limite, pagina, totalPaginas, cargando, error } = storeToRefs(rankingStore)
-const medallas = ['🥇', '🥈', '🥉']
 const rangoInicio = computed(() => {
   if (totalJugadores.value === 0) return 0
   return (pagina.value - 1) * limite.value + 1
@@ -65,7 +64,7 @@ onMounted(() => rankingStore.cargarRanking())
             </thead>
             <tbody>
               <tr v-for="jugador in filas" :key="jugador.user_id" :class="{ 'av-mi-fila': jugador.user_id === jugadorActualId }">
-                <td class="av-puesto"><span v-if="jugador.posicion <= 3" aria-hidden="true">{{ medallas[jugador.posicion - 1] }}</span> {{ jugador.posicion }}</td>
+                <td class="av-puesto">{{ jugador.posicion }} <span v-if="jugador.posicion === 1" aria-hidden="true">🥇</span></td>
                 <th scope="row" class="av-jugador">{{ jugador.nombre }} {{ jugador.apellido }} <span v-if="jugador.user_id === jugadorActualId" class="tag is-primary is-light ml-2">Vos</span></th>
                 <td class="has-text-right av-puntos">{{ jugador.puntos_totales }}</td>
                 <td class="has-text-right">{{ jugador.aciertos }}</td><td class="has-text-right">{{ jugador.fallos }}</td>
@@ -98,8 +97,8 @@ onMounted(() => rankingStore.cargarRanking())
               <tr class="av-mi-fila">
                 <td class="av-puesto">
                   <template v-if="filaPersonal.posicion">
-                    <span v-if="filaPersonal.posicion <= 3" aria-hidden="true">{{ medallas[filaPersonal.posicion - 1] }}</span>
                     {{ filaPersonal.posicion }}
+                    <span v-if="filaPersonal.posicion === 1" aria-hidden="true">🥇</span>
                   </template>
                   <span v-else>Sin posición</span>
                 </td>
