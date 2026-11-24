@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.js';
 
@@ -7,14 +7,14 @@ const router = useRouter();
 const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
+const mostrarPassword = ref(false);
 const error = ref('');
 const cargando = ref(false);
 
+const puedeIngresar = computed(() => Boolean(email.value.trim() && password.value) && !cargando.value);
+
 async function ingresar() {
-  if (!email.value || !password.value) {
-    error.value = 'Completá el email y la contraseña.';
-    return;
-  }
+  if (!puedeIngresar.value) return;
   cargando.value = true;
   error.value = '';
   try {
@@ -56,8 +56,23 @@ async function ingresar() {
           </div>
           <div class="field">
             <label class="label" for="login-password">Contraseña</label>
-            <div class="control">
-              <input id="login-password" v-model="password" type="password" class="input" placeholder="••••••••" autocomplete="current-password" @keyup.enter="ingresar" />
+            <div class="field has-addons">
+              <div class="control is-expanded">
+                <input id="login-password" v-model="password" :type="mostrarPassword ? 'text' : 'password'"
+                  class="input" placeholder="••••••••" autocomplete="current-password" @keyup.enter="ingresar" />
+              </div>
+              <div class="control">
+                <button type="button" class="button is-light" aria-controls="login-password"
+                  :aria-label="mostrarPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                  @click="mostrarPassword = !mostrarPassword">
+                  <svg class="icon is-small" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6Z" />
+                    <circle cx="12" cy="12" r="2.5" />
+                    <path v-if="mostrarPassword" d="m4 4 16 16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -68,7 +83,7 @@ async function ingresar() {
 
           <!-- is-loading (Bulma) muestra un spinner dentro del botón mientras espera al backend -->
           <button type="button" class="button is-primary is-fullwidth is-medium av-elevable"
-            :class="{ 'is-loading': cargando }" :disabled="cargando" @click="ingresar">
+            :class="{ 'is-loading': cargando }" :disabled="!puedeIngresar" @click="ingresar">
             Ingresar
           </button>
           <router-link to="/registro" class="button is-text is-fullwidth mt-2">

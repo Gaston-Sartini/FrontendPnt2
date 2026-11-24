@@ -42,7 +42,7 @@ async function cerrarSesion() {
     <nav class="navbar av-barra" role="navigation" aria-label="Navegación principal">
       <div class="navbar-brand av-barra-contenido">
         <router-link to="/modo" class="navbar-item av-marca">
-          <span class="av-marca-icono">🐦</span> Aves BA
+          <img class="av-marca-icono" src="/favicon.ico" alt="" width="48" height="48"> Aves BA
         </router-link>
 
         <div class="navbar-item ml-auto av-barra-acciones">
@@ -145,7 +145,10 @@ async function cerrarSesion() {
   align-items: center;
   gap: 0.5rem;
 }
-.av-marca-icono {
+.av-marca .av-marca-icono {
+  width: 48px;
+  height: 48px;
+  max-height: none;
   margin-right: 0.4rem;
 }
 
@@ -243,9 +246,6 @@ async function cerrarSesion() {
   }
   .av-marca {
     font-size: 1.65rem;
-  }
-  .av-marca-icono {
-    font-size: 1.75rem;
   }
   .av-boton-salir {
     font-size: 0.95rem;
