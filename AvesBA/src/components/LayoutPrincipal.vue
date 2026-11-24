@@ -6,6 +6,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import PerfilJugador from './PerfilJugador.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -45,11 +46,9 @@ async function cerrarSesion() {
         </router-link>
 
         <div class="navbar-item ml-auto av-barra-acciones">
-          <span v-if="authStore.jugador" class="mr-4 is-hidden-mobile av-saludo">
-            Hola, <strong class="av-saludo">{{ authStore.jugador.nombre }}</strong>
-          </span>
           <!-- Lugar vacío: SeleccionModo pone acá el botón "Modo" (solo en celular) con <Teleport> -->
           <span id="av-lugar-boton-modos"></span>
+          <PerfilJugador v-if="authStore.jugador" :jugador="authStore.jugador" />
           <button type="button" class="button is-light av-elevable av-boton-salir" :disabled="cerrandoSesion" @click="cerrarSesion">
             Cerrar sesión
           </button>
@@ -84,7 +83,6 @@ async function cerrarSesion() {
             </ul>
             <p class="menu-label">Mi cuenta</p>
             <ul class="menu-list">
-              <li><router-link to="/datos-jugador" active-class="is-active">🪪 Datos del jugador</router-link></li>
               <li><router-link to="/ranking" active-class="is-active">🏆 Ranking</router-link></li>
               <li><router-link to="/metricas" active-class="is-active">📊 Métricas</router-link></li>
             </ul>
@@ -142,9 +140,10 @@ async function cerrarSesion() {
   background-color: transparent;
   color: var(--color-dorado);
 }
-/* Saludo al jugador: crema, para que se lea sobre el verde */
-.av-saludo {
-  color: var(--color-crema);
+.av-barra-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 .av-marca-icono {
   margin-right: 0.4rem;
@@ -208,12 +207,26 @@ async function cerrarSesion() {
     padding-right: 0.25rem;
   }
   .av-barra-acciones {
+    position: relative;
     padding-left: 0.25rem;
     padding-right: 0.25rem;
   }
   .av-boton-salir {
     padding-left: 0.7em;
     padding-right: 0.7em;
+  }
+}
+
+@media (max-width: 420px) {
+  .av-barra-contenido {
+    flex-wrap: wrap;
+  }
+  .av-barra-acciones {
+    order: 1;
+    flex-basis: 100%;
+    justify-content: flex-end;
+    padding-inline: 0.5rem;
+    padding-top: 0;
   }
 }
 
@@ -234,16 +247,13 @@ async function cerrarSesion() {
   .av-marca-icono {
     font-size: 1.75rem;
   }
-  .av-saludo {
-    font-size: 1.05rem;
-  }
   .av-boton-salir {
     font-size: 0.95rem;
   }
   .av-menu {
     font-size: 1.1rem;
   }
-  /* Cada opción del menú en un solo renglón ("Datos del jugador") */
+  /* Cada opción del menú en un solo renglón */
   .av-menu .menu-list a {
     white-space: nowrap;
   }
