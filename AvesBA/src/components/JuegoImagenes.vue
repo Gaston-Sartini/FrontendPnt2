@@ -1,16 +1,20 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { iniciarPartida, terminarPartida, obtenerPreguntas, enviarRespuesta, obtenerSesionActiva } from '../servicios/juegoService.js';
 import TarjetaAve from './TarjetaAve.vue';
 import BotonOption from './BotonOption.vue';
 import EstadoJuego from './EstadoJuego.vue';
 import MensajeResultado from './MensajeResultado.vue';
 import ResultadoFinal from './ResultadoFinal.vue';
+import { usePartidaStore } from '../stores/partida.js';
 import { calcularPuntos } from '@/juego/puntaje.js';
 
 const TOTAL_PREGUNTAS = 10;
 const preguntas = ref([]);
-const emit = defineEmits(['partidaTerminada']);
+const props = defineProps({ soloReanudar: Boolean });
+const emit = defineEmits(['partidaTerminada', 'sinPartida']);
+const partidaStore = usePartidaStore();
+const sinPartida = ref(false);
 
 // Estado de la pantalla
 const cargando = ref(false);
@@ -31,16 +35,28 @@ const acerto = computed(() => elegida.value === pregunta.value?.id);
 const respondida = computed(() => elegida.value !== null);
 
 onMounted(() => {
+    partidaStore.juegoVisible = true;
     cargarPartida();
 });
 
-async function cargarPartida() {
+onUnmounted(() => {
+    partidaStore.juegoVisible = false;
+});
+
+async function cargarPartida(soloReanudar = props.soloReanudar) {
     cargando.value = true;
     error.value = '';
+    sinPartida.value = false;
     try {
         const sesion = await obtenerSesionActiva();
-        if(sesion && sesion.preguntas.length > 0) {
+        const hayPartida = Boolean(sesion?.preguntas?.length);
+        partidaStore.marcarPendiente(hayPartida);
+        if (hayPartida) {
             return await retomarPartida(sesion);
+        }
+        if (soloReanudar) {
+            sinPartida.value = true;
+            return;
         }
         return await empezarPartida();
     } catch (err) {
@@ -69,6 +85,7 @@ async function retomarPartida(sesion) {
     
     if (sesion.respuestas.length >= preguntas.value.length) {
         await terminarPartida();
+        partidaStore.marcarPendiente(false);
         terminada.value = true;
     } else {
         numeroPregunta.value = sesion.respuestas.length + 1;
@@ -79,6 +96,7 @@ async function empezarPartida() {
     reiniciarEstado();
     await iniciarPartida();
     preguntas.value = await obtenerPreguntas();
+    partidaStore.marcarPendiente(preguntas.value.length > 0);
 }
 
 
@@ -117,6 +135,7 @@ async function siguientePregunta() {
     
     try {
         await terminarPartida();
+        partidaStore.marcarPendiente(false);
         terminada.value = true;
         emit('partidaTerminada', { aciertos: aciertos.value, total: TOTAL_PREGUNTAS, xp: xp.value });        
     } catch (err) {
@@ -140,11 +159,16 @@ async function siguientePregunta() {
         <!-- Error: aviso rojo de Bulma (notification is-danger is-light) -->
         <div v-else-if="error" class="notification is-danger is-light">
             <p class="mb-3">{{ error }}</p>
-            <button class="button is-danger" @click="cargarPartida">Reintentar</button>
+            <button class="button is-danger" @click="cargarPartida()">Reintentar</button>
+        </div>
+
+        <div v-else-if="sinPartida" class="notification is-info is-light" role="status">
+            <p class="mb-3">Ya no hay una partida pendiente.</p>
+            <button type="button" class="button is-primary" @click="emit('sinPartida')">Volver a los modos</button>
         </div>
 
         <!-- Fin de la partida: componente propio con medalla y estrellas -->
-        <ResultadoFinal v-else-if="terminada" :aciertos="aciertos" :total="TOTAL_PREGUNTAS" :xp="xp" @reiniciar="cargarPartida" />
+        <ResultadoFinal v-else-if="terminada" :aciertos="aciertos" :total="TOTAL_PREGUNTAS" :xp="xp" @reiniciar="cargarPartida(false)" />
 
         <div v-else-if="pregunta">
             <EstadoJuego :numeroPregunta="numeroPregunta" :aciertos="aciertos" :totalPreguntas="TOTAL_PREGUNTAS" :racha="racha" :xp="xp" />

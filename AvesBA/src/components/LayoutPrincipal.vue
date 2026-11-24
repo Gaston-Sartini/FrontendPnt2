@@ -3,14 +3,15 @@
 // Es el mismo patrón que el MainLayout de la clase 8: el contenido de
 // cada pantalla entra por el <slot>. Qué rutas lo usan se decide en
 // router/index.js con meta: { conMenu: true }.
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { usePartidaStore } from '../stores/partida.js';
 import PerfilJugador from './PerfilJugador.vue';
 
 const router = useRouter();
+const partidaStore = usePartidaStore();
 const authStore = useAuthStore();
-
 // En celular el menú lateral se esconde y se abre con el botón ☰ de la barra
 const menuAbierto = ref(false);
 const cerrandoSesion = ref(false);
@@ -19,6 +20,21 @@ const errorSesion = ref('');
 // Trae los datos del jugador para mostrar su nombre en la barra
 onMounted(() => {
   if (!authStore.jugador) authStore.cargarPerfil();
+});
+
+function consultarPartidaPendiente() {
+  if (authStore.jugador) partidaStore.consultarPendiente();
+}
+
+watch(() => authStore.jugador?.id, () => {
+  partidaStore.marcarPendiente(false);
+  consultarPartidaPendiente();
+}, { immediate: true });
+
+onMounted(() => window.addEventListener('online', consultarPartidaPendiente));
+onUnmounted(() => {
+  window.removeEventListener('online', consultarPartidaPendiente);
+  partidaStore.marcarPendiente(false);
 });
 
 // Invalida la sesión en el servidor y vuelve al Login
@@ -40,7 +56,7 @@ async function cerrarSesion() {
   <div class="av-layout">
     <!-- Barra superior. Clases de Bulma: navbar, navbar-brand, navbar-item -->
     <nav class="navbar av-barra" role="navigation" aria-label="Navegación principal">
-      <div class="navbar-brand av-barra-contenido">
+      <div class="navbar-brand av-barra-contenido" :class="{ 'av-con-partida': partidaStore.pendiente && !partidaStore.juegoVisible }">
         <router-link to="/modo" class="navbar-item av-marca">
           <img class="av-marca-icono" src="/favicon.ico" alt="" width="48" height="48"> Aves BA
         </router-link>
@@ -48,6 +64,11 @@ async function cerrarSesion() {
         <div class="navbar-item ml-auto av-barra-acciones">
           <!-- Lugar vacío: SeleccionModo pone acá el botón "Modo" (solo en celular) con <Teleport> -->
           <span id="av-lugar-boton-modos"></span>
+          <router-link v-if="partidaStore.pendiente && !partidaStore.juegoVisible"
+            :to="{ path: '/modo', query: { partida: 'reanudar' } }"
+            class="button is-warning av-elevable av-boton-reanudar">
+            Reanudar partida
+          </router-link>
           <PerfilJugador v-if="authStore.jugador" :jugador="authStore.jugador" />
           <button type="button" class="button is-light av-elevable av-boton-salir" :disabled="cerrandoSesion" @click="cerrarSesion">
             Cerrar sesión
@@ -197,7 +218,8 @@ async function cerrarSesion() {
 }
 
 /* "Cerrar sesión": chico en celular y tablet; en PC se agranda (ver abajo) */
-.av-boton-salir {
+.av-boton-salir,
+.av-boton-reanudar {
   font-size: 0.85rem;
 }
 
@@ -217,6 +239,20 @@ async function cerrarSesion() {
   .av-boton-salir {
     padding-left: 0.7em;
     padding-right: 0.7em;
+  }
+}
+
+@media (max-width: 600px) {
+  .av-con-partida {
+    flex-wrap: wrap;
+  }
+  .av-con-partida .av-barra-acciones {
+    order: 1;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    padding-inline: 0.5rem;
+    padding-top: 0;
   }
 }
 

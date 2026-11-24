@@ -1,10 +1,27 @@
 <script setup>
 import JuegoImagenes from '../components/JuegoImagenes.vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 // El menú lateral y "Cerrar sesión" pasaron a components/LayoutPrincipal.vue,
 // que envuelve a todas las pantallas internas.
-const modo = ref('');
+const route = useRoute();
+const router = useRouter();
+const modoElegido = ref('');
+const soloReanudar = computed(() => route.query.partida === 'reanudar');
+const modo = computed(() => soloReanudar.value ? 'imagen' : modoElegido.value);
+
+function elegirModo(id) {
+  verModos.value = false;
+  modoElegido.value = id;
+  if (id === 'imagen') return;
+  if (route.query.partida) router.replace({ query: { ...route.query, partida: undefined } });
+}
+
+function volverAModos() {
+  modoElegido.value = '';
+  router.replace({ query: { ...route.query, partida: undefined } });
+}
 // En celular los modos se esconden mientras se juega; el botón "Modo" de la barra los muestra
 const verModos = ref(false);
 
@@ -34,7 +51,7 @@ function mostrarResultado(event) {
         </div>
 
         <div class="av-modos-grandes">
-          <button v-for="m in modos" :key="m.id" type="button" class="button av-modo-grande av-elevable" @click="modo = m.id">
+          <button v-for="m in modos" :key="m.id" type="button" class="button av-modo-grande av-elevable" @click="elegirModo(m.id)">
             <span class="av-modo-icono">{{ m.icono }}</span>
             <span class="av-modo-textos">
               <strong>{{ m.nombre }}</strong>
@@ -66,7 +83,7 @@ function mostrarResultado(event) {
             <p class="menu-label is-hidden-mobile">Modo de juego</p>
             <div class="buttons">
               <button v-for="m in modos" :key="m.id" type="button" class="button av-elevable av-modo-chico"
-                :class="modo === m.id ? 'is-primary' : 'is-light'" @click="modo = m.id; verModos = false">
+                :class="modo === m.id ? 'is-primary' : 'is-light'" @click="elegirModo(m.id)">
                 {{ m.icono }} {{ m.nombre }}
               </button>
             </div>
@@ -74,7 +91,7 @@ function mostrarResultado(event) {
         </Teleport>
 
         <div v-if="modo === 'imagen'" class="box av-area-juego">
-          <JuegoImagenes @partida-terminada="mostrarResultado" />
+          <JuegoImagenes :solo-reanudar="soloReanudar" @sin-partida="volverAModos" @partida-terminada="mostrarResultado" />
         </div>
         <div v-else class="notification is-info is-light av-area-juego has-text-centered">
           🛠️ Este modo todavía está en construcción. ¡Muy pronto!
