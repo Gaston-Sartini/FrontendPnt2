@@ -15,6 +15,10 @@ const jugadorActualId = computed(() => {
   if (!filaPersonal.value) return null
   return filaPersonal.value.user_id
 })
+const jugadorActualEstaEnPagina = computed(() => {
+  if (jugadorActualId.value === null) return false
+  return filas.value.some(jugador => jugador.user_id === jugadorActualId.value)
+})
 const jugadorActualSinRespuestas = computed(() => {
   if (!filaPersonal.value) return false
   return filaPersonal.value.aciertos + filaPersonal.value.fallos === 0
@@ -33,14 +37,6 @@ onMounted(() => rankingStore.cargarRanking())
       <router-link to="/modo" class="button is-primary av-elevable">🐦 Jugar</router-link>
     </div>
     <div class="av-controles mb-4">
-      <div class="field mb-0">
-        <label for="ranking-limite" class="label">Jugadores por página</label>
-        <div class="select">
-          <select id="ranking-limite" :value="limite" :disabled="cargando" @change="rankingStore.cambiarLimite(Number($event.target.value))">
-            <option v-for="cantidad in [10, 25, 50, 100]" :key="cantidad" :value="cantidad">{{ cantidad }} jugadores</option>
-          </select>
-        </div>
-      </div>
       <button class="button is-light av-elevable" :class="{ 'is-loading': cargando }" :disabled="cargando" @click="rankingStore.cargarRanking()">Actualizar ranking</button>
     </div>
     <div v-if="cargando" role="status" class="py-5 has-text-centered">
@@ -86,7 +82,7 @@ onMounted(() => rankingStore.cargarRanking())
       </template>
       <p v-else class="notification is-info is-light">🐣 Todavía no hay jugadores en el ranking. ¡Jugá una partida para empezar!</p>
 
-      <section class="av-tu-posicion" aria-labelledby="ranking-posicion-titulo">
+      <section v-if="!jugadorActualEstaEnPagina" class="av-tu-posicion" aria-labelledby="ranking-posicion-titulo">
         <h2 id="ranking-posicion-titulo" class="title is-5">Tu posición</h2>
         <div v-if="filaPersonal" class="table-container av-tabla-contenedor">
           <table class="table is-fullwidth">
