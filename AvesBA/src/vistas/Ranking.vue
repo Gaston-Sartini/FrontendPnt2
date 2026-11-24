@@ -4,12 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useRankingStore } from '../stores/ranking.js'
 
 const rankingStore = useRankingStore()
-const { filas, filaPersonal, totalJugadores, limite, pagina, totalPaginas, cargando, error } = storeToRefs(rankingStore)
-const rangoInicio = computed(() => {
-  if (totalJugadores.value === 0) return 0
-  return (pagina.value - 1) * limite.value + 1
-})
-const rangoFin = computed(() => Math.min(pagina.value * limite.value, totalJugadores.value))
+const { filas, filaPersonal, totalJugadores, pagina, totalPaginas, cargando, error } = storeToRefs(rankingStore)
 const jugadorActualId = computed(() => {
   if (!filaPersonal.value) return null
   return filaPersonal.value.user_id
@@ -33,10 +28,16 @@ onMounted(() => rankingStore.cargarRanking())
         <h1 class="title is-3 mb-2">🏆 Ranking</h1>
         <p class="av-texto-suave">Conocé a los jugadores con más puntos y seguí sumando con cada ave.</p>
       </div>
-      <router-link to="/modo" class="button is-primary av-elevable">🐦 Jugar</router-link>
-    </div>
-    <div class="av-controles mb-4">
-      <button class="button is-light av-elevable" :class="{ 'is-loading': cargando }" :disabled="cargando" @click="rankingStore.cargarRanking()">Actualizar ranking</button>
+      <div class="av-acciones">
+        <button type="button" class="button is-primary av-elevable" :class="{ 'is-loading': cargando }"
+          :disabled="cargando" aria-label="Actualizar ranking" title="Actualizar ranking" @click="rankingStore.cargarRanking()">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 10a8 8 0 1 0-.9 6.2M20 5v5h-5" />
+          </svg>
+        </button>
+        <router-link to="/modo" class="button is-primary av-elevable">🐦 Jugar</router-link>
+      </div>
     </div>
     <div v-if="cargando" role="status" class="py-5 has-text-centered">
       <p class="mb-3">🐦 Buscando a los mejores observadores...</p>
@@ -48,9 +49,6 @@ onMounted(() => rankingStore.cargarRanking())
     </div>
     <div v-else>
       <template v-if="totalJugadores > 0">
-        <p class="av-texto-suave mb-3" aria-live="polite">
-          Puestos {{ rangoInicio }}–{{ rangoFin }} de {{ totalJugadores }} jugadores · Página {{ pagina }} de {{ totalPaginas }}
-        </p>
         <p id="ranking-desplazamiento" class="av-ayuda-tabla av-texto-suave is-size-7 mb-2">Deslizá la tabla hacia los costados para ver todas las estadísticas.</p>
         <div class="table-container av-tabla-contenedor" tabindex="0" role="region" aria-label="Tabla de posiciones" aria-describedby="ranking-desplazamiento">
           <table class="table is-fullwidth is-hoverable">
@@ -124,7 +122,7 @@ onMounted(() => rankingStore.cargarRanking())
   min-width: 0;
   max-width: 100%;
 }
-.av-encabezado > div {
+.av-encabezado > :first-child {
   flex: 1 1 16rem;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -150,14 +148,18 @@ onMounted(() => rankingStore.cargarRanking())
   overflow-wrap: anywhere;
 }
 .av-ayuda-tabla { display: none; }
-.av-encabezado, .av-controles {
+.av-encabezado {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
-.av-controles { justify-content: flex-start; align-items: flex-end; }
+.av-acciones {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
 .av-paginacion {
   display: flex;
   flex-wrap: wrap;
@@ -180,10 +182,6 @@ onMounted(() => rankingStore.cargarRanking())
 .table tbody tr.av-mi-fila td { color: var(--color-texto); }
 @media (max-width: 768px) {
   .av-ranking { padding: 1rem; }
-  .av-encabezado .button { width: 100%; }
-  .av-controles { gap: 0.75rem; }
-  .av-controles > .field, .av-controles > .button { width: 100%; }
-  .av-controles .select, .av-controles select { width: 100%; }
 }
 @media (max-width: 1200px) {
   .av-ayuda-tabla { display: block; }
